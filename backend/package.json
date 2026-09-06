@@ -1,0 +1,28 @@
+{
+  "name": "project-management-backend",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev":"bun --watch src/server.ts",
+    "start": "bun src/server.ts",
+    "typecheck":"tsc -noEmit"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.23.1"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0",
+    "zod": "^4.5.4"
+  }
+}
