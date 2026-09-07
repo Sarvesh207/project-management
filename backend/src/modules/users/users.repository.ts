@@ -1,4 +1,5 @@
 import prisma from "../../db/prisma";
+import type { UpdateUserInput } from "./users.schema";
 
 export async function findAllUsers() {
   const users = prisma.users.findMany({
@@ -22,5 +23,36 @@ export async function findUser(id: string) {
     },
   });
 }
+export async function updateUser(id: string, data: UpdateUserInput) {
+  const { email, full_name, avatar_url, bio, phone } = data;
+
+  const userData = {
+    ...(email !== undefined && { email }),
+    ...(full_name !== undefined && { full_name }),
+  };
+
+  const userProfileData = {
+    ...(avatar_url !== undefined && { avatar_url }),
+    ...(bio !== undefined && { bio }),
+    ...(phone !== undefined && { phone }),
+  };
+
+  return prisma.users.update({
+    where: {
+      id,
+    },
+    data: {
+      ...userData,
+      ...(Object.keys(userProfileData).length > 0 && {
+        profile: {
+          update: userProfileData,
+        },
+      }),
+    },
+    include: {
+      profile: true,
+    },
+  });
+}
+
 export async function deleteUser() {}
-export async function updateUser() {}
