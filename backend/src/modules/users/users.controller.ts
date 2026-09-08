@@ -3,9 +3,10 @@ import {
   getAllUsers as getAllUsersService,
   getUser as getUserService,
   updateUser as updateUserService,
+  deleteUser as deleteUserService,
 } from "./users.service";
 import { ApiResponse, ApiError } from "../../utils";
-import { updateUserSchema } from "./users.schema";
+import { updateUserSchema, userIdSchema } from "./users.schema";
 
 export async function getAllUsers(req: Request, res: Response) {
   const users = await getAllUsersService();
@@ -46,4 +47,25 @@ export async function updateUser(req: Request, res: Response) {
   return res
     .status(200)
     .json(new ApiResponse(200, user, "User updated successfully."));
+}
+
+export async function deleteUser(req: Request, res: Response) {
+  const { id } = req.params;
+
+  const result = userIdSchema.safeParse(req.params);
+
+
+  if (!result.success) {
+    throw new ApiError(400, "Invalid user id");
+  }
+
+  if (typeof id !== "string") {
+    throw new ApiError(400, "Invalid user id");
+  }
+
+  await deleteUserService(id);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "User deleted successfully"));
 }

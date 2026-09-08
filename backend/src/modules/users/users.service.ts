@@ -2,6 +2,7 @@ import {
   findAllUsers,
   findUser,
   updateUser as updateUserRepository,
+  deleteUser as deleteUserRepository,
 } from "./users.repository";
 import { ApiError } from "../../utils";
 import { z } from "zod";
@@ -35,7 +36,6 @@ export async function getUser(id: string) {
 }
 
 export async function updateUser(id: string, data: UpdateUserInput) {
-
   const existingUser = await findUser(id);
 
   if (!existingUser) {
@@ -43,4 +43,14 @@ export async function updateUser(id: string, data: UpdateUserInput) {
   }
 
   return updateUserRepository(id, data);
+}
+
+export async function deleteUser(id: string) {
+  const existingUser = await getUser(id);
+
+  if (!existingUser) {
+    throw new ApiError(404, "User is not found");
+  }
+
+  return deleteUserRepository(id);
 }

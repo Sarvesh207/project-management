@@ -55,4 +55,8 @@ export async function updateUser(id: string, data: UpdateUserInput) {
   });
 }
 
-export async function deleteUser() {}
+export async function deleteUser(id: string) {
+  return await prisma.users.delete({
+    where: { id },
+  });
+}
