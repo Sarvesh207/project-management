@@ -21,7 +21,10 @@ export async function createUser(data: createUserRepo) {
     },
   });
 }
-function loginUser(data: UserLoginInput) {}
+function loginUser(data: UserLoginInput) {
+
+
+}
 function logoutUser() {}
 function authMe() {}
 function forgotUserPassword() {}
