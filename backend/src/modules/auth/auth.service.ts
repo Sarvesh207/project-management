@@ -1,10 +1,8 @@
 import z from "zod";
 import type { UserRegisterInput, UserLoginInput } from "./auth.schema";
 import { ApiError } from "../../utils";
-import { findUserByEmail, createUser } from "./auth.repository";
+import { findUserByEmail, createUser, findUserById } from "./auth.repository";
 import { comparePassword, hashPassword } from "../../utils/password";
-import { da } from "zod/v4/locales";
-import { get } from "node:http";
 import { generateAccessToken } from "../../utils/jwt";
 
 async function getUserByEmail(email: string) {
@@ -55,4 +53,14 @@ export async function loginUserService(data: UserLoginInput) {
       fullname: user.full_name,
     },
   };
+}
+
+export async function getUserById(userId: string) {
+  const user = await findUserById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return user;
 }

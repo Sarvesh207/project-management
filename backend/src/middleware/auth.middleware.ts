@@ -11,7 +11,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies.accessToken;
 
   if (!token) {
-    throw new ApiError(401, "Unthorized: no token provided");
+    throw new ApiError(401, "Unauthorized: no token provided");
   }
 
   try {
@@ -24,6 +24,6 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
     next();
   } catch (error) {
-    throw new ApiError(401, "Unauthrized: Invalid token");
+    throw new ApiError(401, "Unauthorized: Invalid token");
   }
 }

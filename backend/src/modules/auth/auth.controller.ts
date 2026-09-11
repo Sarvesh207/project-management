@@ -2,7 +2,11 @@ import type { Response, Request } from "express";
 import { ApiError, ApiResponse } from "../../utils";
 import { userRegisterSchema, userLoginSchema } from "./auth.schema";
 
-import { loginUserService, registerUserService } from "./auth.service";
+import {
+  loginUserService,
+  registerUserService,
+  getUserById,
+} from "./auth.service";
 
 export async function registerUser(req: Request, res: Response) {
   const result = userRegisterSchema.safeParse(req.body);
@@ -29,9 +33,9 @@ export async function loginUser(req: Request, res: Response) {
 
   // set http-only cookies
 
-  res.cookie("access-token", accessToken, {
+  res.cookie("accessToken", accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "producation",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 24 * 60 * 60 * 1000,
   });
@@ -39,4 +43,18 @@ export async function loginUser(req: Request, res: Response) {
   return res
     .status(200)
     .json(new ApiResponse(200, { user }, "User login successfully"));
+}
+
+export async function logoutUser(req: Request, res: Response) {
+  res.clearCookie("accessToken");
+
+  return res.status(200).json(new ApiResponse(200, null, "Logout successful"));
+}
+
+export async function getCurrentUser(req: Request, res: Response) {
+  const user = await getUserById(req.userId as string);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Current user fetched successfully"));
 }

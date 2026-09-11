@@ -21,10 +21,19 @@ export async function createUser(data: createUserRepo) {
     },
   });
 }
-function loginUser(data: UserLoginInput) {
 
-
+export async function findUserById(id: string) {
+  return prisma.users.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      email: true,
+      full_name: true,
+      created_at: true,
+      updated_at: true,
+      profile: true,
+    },
+  });
 }
-function logoutUser() {}
-function authMe() {}
-function forgotUserPassword() {}
