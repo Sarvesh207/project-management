@@ -1,5 +1,10 @@
 import prisma from "../../db/prisma";
-import type { CreateProjectInput, UpdateProjectInput } from "./project.schema";
+import type {
+  CreateProjectInput,
+  createTaskInput,
+  UpdateProjectInput,
+  updateTaskInput,
+} from "./project.schema";
 
 async function findAllProjects(userId: string) {
   return prisma.projects.findMany({
@@ -165,6 +170,94 @@ async function getProjectMember(projectId: string, userId: string) {
   });
 }
 
+async function getProjectTaskById(projectId: string, taskId: string) {
+  return prisma.tasks.findFirst({
+    where: {
+      id: taskId,
+      project_id: projectId,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      due_date: true,
+      priority: true,
+      project_id: true,
+      assigned_to: true,
+      created_at: true,
+      updated_at: true,
+    },
+  });
+}
+
+async function getProjectTasks(projectId: string) {
+  return prisma.tasks.findMany({
+    where: {
+      project_id: projectId,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      due_date: true,
+      priority: true,
+      project_id: true,
+      assigned_to: true,
+      created_at: true,
+      updated_at: true,
+    },
+  });
+}
+
+async function createProjectTask(projectId: string, data: createTaskInput) {
+  const { assigned_to, ...tasksData } = data;
+  return prisma.tasks.create({
+    data: {
+      ...tasksData,
+      projects: {
+        connect: {
+          id: projectId,
+        },
+      },
+      ...(assigned_to && {
+        users: {
+          connect: {
+            id: assigned_to,
+          },
+        },
+      }),
+    },
+  });
+}
+
+async function updateProjectTask(taskId: string, data: updateTaskInput) {
+  return prisma.tasks.update({
+    where: {
+      id: taskId,
+    },
+    data,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      due_date: true,
+      priority: true,
+      project_id: true,
+      assigned_to: true,
+      created_at: true,
+      updated_at: true,
+    },
+  });
+}
+
+async function deleteProjectTask(taskId: string) {
+  return prisma.tasks.delete({
+    where: {
+      id: taskId,
+    },
+  });
+}
+
 export {
   findProjectById,
   findAllProjects,
@@ -176,4 +269,9 @@ export {
   removeMemberFromProject,
   getProjectMember,
   getProjectMembers,
+  getProjectTaskById,
+  getProjectTasks,
+  createProjectTask,
+  updateProjectTask,
+  deleteProjectTask,
 };

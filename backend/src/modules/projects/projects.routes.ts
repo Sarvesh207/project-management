@@ -12,6 +12,11 @@ import {
   addProjectMember,
   updateProjectMemberRole,
   removeProjectMember,
+  getProjectTasksController,
+  getProjectTaskController,
+  createProjectTaskController,
+  updateProjectTaskController,
+  deleteProjectTaskController,
 } from "./projects.controller";
 
 const router = Router();
@@ -34,10 +39,10 @@ router.delete("/:projectId/members/:userId", requireAuth, removeProjectMember);
 
 // projects tasks
 
-router.get("/:projectId/tasks", requireAuth, () => {}); // get all  tasks associated with project
-router.get("/:projectId/tasks/:tasksId", requireAuth, () => {}); // get specific tasks
-router.post("/:projectId/tasks", requireAuth, () => {}); // create tasks in project
-router.put("/:projectId/tasks/:tasksId", requireAuth, () => {}); // update tasks
-router.delete("/:projectId/tasks/:tasksId", requireAuth, () => {}); // delete tasks
+router.get("/:projectId/tasks", requireAuth, getProjectTasksController); // get all  tasks associated with project
+router.get("/:projectId/tasks/:tasksId", requireAuth, getProjectTaskController); // get specific tasks
+router.post("/:projectId/tasks", requireAuth, createProjectTaskController); // create tasks in project
+router.put("/:projectId/tasks/:tasksId", requireAuth, updateProjectTaskController); // update tasks
+router.delete("/:projectId/tasks/:tasksId", requireAuth, deleteProjectTaskController); // delete tasks
 
 export default router;

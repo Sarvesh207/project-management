@@ -1,6 +1,11 @@
 import type { RawCreateParams } from "zod/v3";
 import { ApiError } from "../../utils";
-import type { CreateProjectInput, UpdateProjectInput } from "./project.schema";
+import type {
+  CreateProjectInput,
+  createTaskInput,
+  UpdateProjectInput,
+  updateTaskInput,
+} from "./project.schema";
 import {
   findAllProjects,
   findProjectById,
@@ -12,7 +17,13 @@ import {
   removeMemberFromProject,
   getProjectMember,
   getProjectMembers,
+  getProjectTaskById,
+  getProjectTasks,
+  createProjectTask,
+  updateProjectTask,
+  deleteProjectTask,
 } from "./projects.repository";
+import { requireProjectRole } from "../../utils/project-member.authorization";
 
 async function getAllproject(userId: string) {
   const projects = await findAllProjects(userId);
@@ -245,6 +256,124 @@ async function removeMemberService(
   await removeMemberFromProject(projectId, userId);
 }
 
+async function createProjectTasksService(
+  projectId: string,
+  userId: string,
+  tasksData: createTaskInput,
+) {
+  // 1. check project exist
+  const project = await findProjectById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+  // 2. requsting user member of project
+  await requireProjectRole(projectId, userId, ["owner", "admin", "member"]);
+  // 3. check if tasks is assigning to user make sure assigning user member project
+  if (tasksData.assigned_to) {
+    const member = await getProjectMember(projectId, tasksData.assigned_to);
+    if (!member) {
+      throw new ApiError(400, "Assigned user is not a member of this project");
+    }
+  }
+  const task = createProjectTask(projectId, tasksData);
+  return task;
+}
+async function updateTasksService(
+  projectId: string,
+  userId: string,
+  taskId: string,
+  taskData: updateTaskInput,
+) {
+  const project = await findProjectById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  const member = await requireProjectRole(projectId, userId, [
+    "owner",
+    "admin",
+    "member",
+  ]);
+
+  const task = await getProjectTaskById(projectId, taskId);
+
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  const isPrivileged = member.role === "admin" || member.role === "owner";
+  const isAssignee = task.assigned_to === userId;
+
+  if (!isPrivileged && !isAssignee) {
+    throw new ApiError(403, "You do not have permssion to update this task");
+  }
+
+  if (!isPrivileged && taskData.assigned_to !== undefined) {
+    throw new ApiError(403, "Only admins and owners can assign tasks");
+  }
+
+  if (!isPrivileged && taskData.priority !== undefined) {
+    throw new ApiError(403, "Only admins and owners can change task priority");
+  }
+
+  return updateProjectTask(taskId, taskData);
+}
+async function deleteProjectTasksService(
+  projectId: string,
+  taskId: string,
+  userId: string,
+) {
+  const project = await findProjectById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  await requireProjectRole(projectId, userId, ["owner", "admin"]);
+
+  // Check task belongs to this project
+  const task = await getProjectTaskById(projectId, taskId);
+
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  return deleteProjectTask(taskId);
+}
+async function getAllProjectTasksService(projectId: string, userId: string) {
+  const project = await findProjectById(projectId);
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  await requireProjectRole(projectId, userId, ["owner", "admin", "member"]);
+
+  return getProjectTasks(projectId);
+}
+async function getProjectTaskService(
+  projectId: string,
+  userId: string,
+  taskId: string,
+) {
+  // 1. Check project exists
+  const project = await findProjectById(projectId);
+
+  if (!project) {
+    throw new ApiError(404, "Project not found");
+  }
+
+  // 2. Check user is a member of the project
+  await requireProjectRole(projectId, userId, ["owner", "admin", "member"]);
+
+  // 3. Get the task and make sure it belongs to this project
+  const task = await getProjectTaskById(projectId, taskId);
+
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  return task;
+}
+
 export {
   getAllproject as getAllProjectService,
   getProjectById as getProjectByIdService,
@@ -256,4 +385,9 @@ export {
   addMemberService,
   updateMemberService,
   removeMemberService,
+  createProjectTasksService,
+  updateTasksService,
+  deleteProjectTasksService,
+  getAllProjectTasksService,
+  getProjectTaskService,
 };

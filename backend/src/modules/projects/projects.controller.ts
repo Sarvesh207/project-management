@@ -11,6 +11,11 @@ import {
   addMemberService,
   updateMemberService,
   removeMemberService,
+  createProjectTasksService,
+  updateTasksService,
+  deleteProjectTasksService,
+  getAllProjectTasksService,
+  getProjectTaskService,
 } from "./projects.service";
 import { UUIDSchema } from "../../types/global.types";
 import { ApiError, ApiResponse } from "../../utils";
@@ -19,6 +24,9 @@ import {
   updateProjectSchema,
   addMemberSchema,
   updateMemberRoleSchema,
+  createTasksSchema,
+  updateTaskSchema,
+  taskParamsSchema,
 } from "./project.schema";
 import prisma from "../../db/prisma";
 
@@ -253,6 +261,120 @@ async function removeProjectMember(req: Request, res: Response) {
     .json(new ApiResponse(200, null, "Project member removed successfully"));
 }
 
+async function getProjectTasksController(req: Request, res: Response) {
+  const projectIdParseResult = UUIDSchema.safeParse({ id: req.params.projectId });
+  const reqUserIdResult = UUIDSchema.safeParse({ id: req.userId });
+
+  if (!projectIdParseResult.success || !reqUserIdResult.success) {
+    throw new ApiError(400, "Invalid ID");
+  }
+
+  const tasks = await getAllProjectTasksService(
+    projectIdParseResult.data.id,
+    reqUserIdResult.data.id
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, tasks, "Tasks fetched successfully"));
+}
+
+async function getProjectTaskController(req: Request, res: Response) {
+  const paramsResult = taskParamsSchema.safeParse({
+    projectId: req.params.projectId,
+    taskId: req.params.tasksId,
+  });
+  const reqUserIdResult = UUIDSchema.safeParse({ id: req.userId });
+
+  if (!paramsResult.success || !reqUserIdResult.success) {
+    throw new ApiError(400, "Invalid ID");
+  }
+
+  const task = await getProjectTaskService(
+    paramsResult.data.projectId,
+    reqUserIdResult.data.id,
+    paramsResult.data.taskId
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task, "Task fetched successfully"));
+}
+
+async function createProjectTaskController(req: Request, res: Response) {
+  const projectIdParseResult = UUIDSchema.safeParse({ id: req.params.projectId });
+  const reqUserIdResult = UUIDSchema.safeParse({ id: req.userId });
+  const bodyResult = createTasksSchema.safeParse(req.body);
+
+  if (!projectIdParseResult.success || !reqUserIdResult.success) {
+    throw new ApiError(400, "Invalid ID");
+  }
+
+  if (!bodyResult.success) {
+    throw new ApiError(400, "Invalid input data");
+  }
+
+  const newTask = await createProjectTasksService(
+    projectIdParseResult.data.id,
+    reqUserIdResult.data.id,
+    bodyResult.data
+  );
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, newTask, "Task created successfully"));
+}
+
+async function updateProjectTaskController(req: Request, res: Response) {
+  const paramsResult = taskParamsSchema.safeParse({
+    projectId: req.params.projectId,
+    taskId: req.params.tasksId,
+  });
+  const reqUserIdResult = UUIDSchema.safeParse({ id: req.userId });
+  const bodyResult = updateTaskSchema.safeParse(req.body);
+
+  if (!paramsResult.success || !reqUserIdResult.success) {
+    throw new ApiError(400, "Invalid ID");
+  }
+
+  if (!bodyResult.success) {
+    throw new ApiError(400, "Invalid input data");
+  }
+
+  const updatedTask = await updateTasksService(
+    paramsResult.data.projectId,
+    reqUserIdResult.data.id,
+    paramsResult.data.taskId,
+    bodyResult.data
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedTask, "Task updated successfully"));
+}
+
+async function deleteProjectTaskController(req: Request, res: Response) {
+  const paramsResult = taskParamsSchema.safeParse({
+    projectId: req.params.projectId,
+    taskId: req.params.tasksId,
+  });
+  const reqUserIdResult = UUIDSchema.safeParse({ id: req.userId });
+
+  if (!paramsResult.success || !reqUserIdResult.success) {
+    throw new ApiError(400, "Invalid ID");
+  }
+
+  await deleteProjectTasksService(
+    paramsResult.data.projectId,
+    paramsResult.data.taskId,
+    reqUserIdResult.data.id
+  );
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Task deleted successfully"));
+}
+
 export {
   getAllProjects,
   getProjectById,
@@ -265,4 +387,9 @@ export {
   addProjectMember,
   updateProjectMemberRole,
   removeProjectMember,
+  getProjectTasksController,
+  getProjectTaskController,
+  createProjectTaskController,
+  updateProjectTaskController,
+  deleteProjectTaskController,
 };
