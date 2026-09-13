@@ -89,10 +89,91 @@ async function updateProject(id: string, data: UpdateProjectInput) {
   });
 }
 
+async function addMemberToProject(
+  projectId: string,
+  userId: string,
+  role: "admin" | "member",
+) {
+  return prisma.project_members.create({
+    data: {
+      project_id: projectId,
+      user_id: userId,
+      role: role,
+    },
+  });
+}
+async function updateProjectMemberRole(
+  projectId: string,
+  userId: string,
+  role: "admin" | "member" | "owner",
+) {
+  return prisma.project_members.update({
+    where: {
+      project_id_user_id: {
+        project_id: projectId,
+        user_id: userId,
+      },
+    },
+    data: {
+      role: role,
+    },
+  });
+}
+async function removeMemberFromProject(projectId: string, userId: string) {
+  return prisma.project_members.delete({
+    where: {
+      project_id_user_id: {
+        project_id: projectId,
+        user_id: userId,
+      },
+    },
+  });
+}
+async function getProjectMembers(projectId: string) {
+  return prisma.project_members.findMany({
+    where: {
+      project_id: projectId,
+    },
+    include: {
+      users: {
+        select: {
+          full_name: true,
+          email: true,
+          id: true,
+        },
+      },
+    },
+  });
+}
+async function getProjectMember(projectId: string, userId: string) {
+  return prisma.project_members.findUnique({
+    where: {
+      project_id_user_id: {
+        project_id: projectId,
+        user_id: userId,
+      },
+    },
+    include: {
+      users: {
+        select: {
+          full_name: true,
+          email: true,
+          id: true,
+        },
+      },
+    },
+  });
+}
+
 export {
   findProjectById,
   findAllProjects,
   createProject,
   deleteProject,
   updateProject,
+  addMemberToProject,
+  updateProjectMemberRole,
+  removeMemberFromProject,
+  getProjectMember,
+  getProjectMembers,
 };

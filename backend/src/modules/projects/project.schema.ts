@@ -25,9 +25,30 @@ const updateProjectSchema = z
   })
   .strict();
 
+const addMemberSchema = z.object({
+  user_id: z.string().uuid("Invalid User ID"),
+  role: z.enum(["admin", "member"]).default("member"),
+});
+
+const updateMemberRoleSchema = z.object({
+  role: z.enum(["admin", "member"]),
+});
+
 type CreateProjectInput = z.infer<typeof createProjectSchema>;
 type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+type addMemberInput = z.infer<typeof addMemberSchema>;
+type updateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
 
-export { createProjectSchema, updateProjectSchema };
+export {
+  createProjectSchema,
+  updateProjectSchema,
+  addMemberSchema,
+  updateMemberRoleSchema,
+};
 
-export type { CreateProjectInput, UpdateProjectInput };
+export type {
+  CreateProjectInput,
+  UpdateProjectInput,
+  addMemberInput,
+  updateMemberRoleInput,
+};
